@@ -28,7 +28,6 @@ const createImg = (product) => {
   const kanapImage = document.querySelector(".item__img")
   kanapImage.append(img)
   // .kanapImage créé , parent de img -> insère la photo de l'article
-  console.log("Image ajoutée")
 }
 
 
@@ -36,7 +35,6 @@ const createTitle = (product) => {
   const itemTitle = document.querySelector("#title")
   itemTitle.textContent = product.name
   // insère le nom du produit dans #title
-  console.log("Titre ajouté")
 }
 
 
@@ -44,7 +42,6 @@ const createPrice = (product) => {
   const itemPrice = document.querySelector("#price")
   itemPrice.textContent = product.price
   // insère le prix du produit dans #price
-  console.log("Prix ajouté")
 }
 
 
@@ -52,7 +49,6 @@ const createDecsription = (product) => {
   const itemDescription = document.getElementById("description")
   itemDescription.textContent = product.description
   // insère la description du produit dans description
-  console.log("Description ajouté")
 }
 
 
@@ -64,19 +60,8 @@ const createOption = (colors) => {
     option.value = color
     colorSelect.append(option)
     // insère la couleur dans la liste des couleurs
-    console.log("Couleur disponible ajouté")
-    console.log("Option ajouté")
     })
 }
-//////////////////RESTE A ENVOYER LA PAGE PRODUIT /////////////////
-//////////////////      DANS LE PANIER            /////////////////  
-
-// Si j'appuie sur le button l'objet est envoyé au panier
-// avec la couleur et la quantité selectionné en vérifiant 
-// si le produit est déjà dans le panier alors +1 (si meme couleur)
-// sinon couleur differente = nouvelle ligne page panier (via l'id)
-// alerte en cas de couleur ET quantité non choisi
-// alors --> empecher la redirection vers la page panier
 
 const createSentCart = () => {
   const addToCart = document.querySelector('#addToCart')
@@ -87,42 +72,51 @@ const createSentCart = () => {
     addToCart.addEventListener('click', () => {
       // Ce qu'il se passe au "click" sur  le bouton
       const colorSelect = document.querySelector("#colors").value;
-      const quantityChoise = parseInt(document.querySelector("#quantity").value); //parseInt permet de recuperer le nombre entier
-        // si colorSelect ou quantityChoise est égal a "null"
-      // si colorSelect est stictement égal à "" ou quantityChoise strictement égal à 0
-      if (colorSelect == null || quantityChoise == null || colorSelect === "" ||  quantityChoise == 0) {
-      // ALORS
-      // alerte 
+      const quantityChoice = parseInt(document.querySelector("#quantity").value); //parseInt permet de recuperer le nombre entier
+        // si colorSelect ou quantityChoice est égal a "null"
+      // si colorSelect est stictement égal à "" ou quantityChoice strictement égal à 0
+      if (colorSelect == null || quantityChoice == null || colorSelect === "" ||  quantityChoice == 0 || quantityChoice <0 ) {
       alert("Merci de choisir une couleur et/où une quantité SVP.");
-      console.log("alerte")
       return; // empêche la redirection vers la page panier
       }
+
+      function validateForm(colors, colorThatDoesNotExist) {
+        const validColors = {}
+
+        for (let i = 0; i < colors.length; i++) {
+          const color = colors[i]
+          validColors[color] = true
+        }
+        if (validColors[colorThatDoesNotExist]) {
+          return true
+        }
+        return false
+        }
+
       // si l'article n'existe pas encore, sur la page panier, 
       // alors on recupere ses datas
       // 
       const cartArticle = JSON.parse(localStorage.getItem("cart")) || [];
         // transforme le panier JSON en objet
       const newItem = cartArticle.find((itemData) => itemData.id == itemId && itemData.color == colorSelect)
-      // .find = renvoie la valeur du premier élément trouvé dans le tableau 
-      // qui respecte la condition donnée par la fonction de test passée en argument
+      
       // verifie si l'id et la color sont identiques à un article déjà existant dans le panier
       // si l'article n'existe pas encore, on crée un nouveau item
       if (!newItem) {
         const newItem = {
         id: itemId,
         color: colorSelect,
-        quantity: quantityChoise,
+        quantity: quantityChoice,
         }
       // Ajout d'une nouvelle ligne si nouvel article
       cartArticle.push(newItem) 
       }
       // sinon on augmente seulement la quantité
       else { 
-        newItem.quantity += quantityChoise
+        newItem.quantity += quantityChoice
       }
       // localStorage sauvegarde
       localStorage.setItem("cart", JSON.stringify(cartArticle))
-      console.log("Le localStorage est à jour !", localStorage.getItem("cart"))
 
       // redirection vers la page panier
       window.location.href = "cart.html"
