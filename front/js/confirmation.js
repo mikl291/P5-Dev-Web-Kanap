@@ -22,5 +22,4 @@ const clearCart = () => {
 const orderId = getOrder()
  // obtient le n° cmd
  displayOrder(orderId) 
- console.log(orderId)// affiche le n° cmd
  clearCart() // efface le panier après confiramation de cmd
