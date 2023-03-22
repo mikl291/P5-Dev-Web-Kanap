@@ -75,20 +75,21 @@ function validateForm(colors, colorThatDoesNotExist) {
 
 const createSentCart = () => {
   const addToCart = document.querySelector('#addToCart');
-  
   if (addToCart != null) {
-    addToCart.addEventListener('click', () => {
-      const colorSelect = document.querySelector("#colors").value;
+    addToCart.addEventListener('click', () => { // On ajoute un événement click sur le bouton d'ajout au panier
+      // On récupère la couleur sélectionnée par l'utilisateur
+      const colorSelect = document.querySelector("#colors").value; 
+      // On vérifie que la couleur et la quantité sont valides
       const quantityChoise = parseInt(document.querySelector("#quantity").value);
-
       if (colorSelect == null || colorSelect === "" || isNaN(quantityChoise) || quantityChoise <= 0 || quantityChoise > 100) {
         alert("Merci de choisir une couleur et une quantité valide entre 1 et 100.");
         return;
       }
-
+      // On récupère le panier dans le localStorage, ou on crée un tableau vide s'il n'existe pas encore
       const cartArticle = JSON.parse(localStorage.getItem("cart")) || [];
+      // On cherche si l'article est déjà présent dans le panier
       const newItem = cartArticle.find((itemData) => itemData.id == itemId && itemData.color == colorSelect);
-      
+      // Si l'article n'est pas déjà présent, on l'ajoute avec la quantité choisie
       if (!newItem) {
         const newItem = {
           id: itemId,
@@ -97,12 +98,14 @@ const createSentCart = () => {
         };
         cartArticle.push(newItem);
       } else { 
+        // Si l'article est déjà présent, on ajoute la quantité choisie à la quantité existante
         newItem.quantity += quantityChoise;
       }
-      
+      // Si l'article est déjà présent, on ajoute la quantité choisie à la quantité existante
       localStorage.setItem("cart", JSON.stringify(cartArticle));
-
+      // On affiche un message de confirmation à l'utilisateur
       alert(`Votre produit a été ajouté au panier.`);
+      // On redirige l'utilisateur vers la page du panier
       window.location.href = "cart.html";
     });
   }
