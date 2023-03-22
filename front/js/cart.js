@@ -258,17 +258,19 @@ orderButton.addEventListener("click", (event) => {
     });
 });
 
-
+// Définition des expressions régulières utilisées pour valider les champs
 const nameRegex = /^[a-zA-Z\-\'\s]+$/;
 const addressRegex = /^[a-zA-Z0-9\s\,\'\-]*$/;
 const cityRegex = /^[a-zA-Z\-\'\s]+$/;
 const emailRegex = /^[A-Za-z0-9_!#$%&'*+\/=?`{|}~^.-]+@[A-Za-z0-9.-]+\.[A-Za-z][A-Za-z]{1,}$/;
 
+// Fonction qui valide une chaîne de caractères en enlevant les espaces inutiles en début et fin
 const validateString = (val) => {
   const trimmedVal = val.trim();
   return !trimmedVal.startsWith(" ") && nameRegex.test(trimmedVal);
 };
 
+// Fonction qui ajoute un écouteur d'événements pour vérifier les champs
 const addTrimEventListener = (element, errorElement, regex, errorMsg) => {
   element.addEventListener("input", (event) => {
     event.preventDefault();
@@ -290,6 +292,7 @@ const addTrimEventListener = (element, errorElement, regex, errorMsg) => {
   });
 };
 
+// Ajout des écouteurs d'événements pour chaque champ à valider
 addTrimEventListener(firstName, document.querySelector("#firstNameErrorMsg"), nameRegex, "Le prénom doit être composé de lettres (le tiret et l'apostrophe sont acceptés).");
 addTrimEventListener(lastName, document.querySelector("#lastNameErrorMsg"), nameRegex, "Le nom doit être composé de lettres (le tiret et l'apostrophe sont acceptés).");
 addTrimEventListener(address, document.querySelector("#addressErrorMsg"), addressRegex, "Format d'adresse non conforme.");
