@@ -1,22 +1,37 @@
 const cartForArticle = JSON.parse(localStorage.getItem("cart")) || [];
-// transforme le panier JSON en objet
+// utilisée pour convertir cette chaîne de caractères en un objet JavaScript
 
 cartForArticle.forEach((cartItem) => {
-  // Requête pour récupérer les json dans Product.js et les url pour chaque id de produit
+  // Requête qui renvoie une promesse, la réponse est convertie en objet JSON
   fetch("http://localhost:3000/api/products/" + cartItem.id)
     .then((res) => res.json())
     .then((product) => displayCartItems(cartItem, product))
+    // "catch()" gère les erreurs qui pourraient se produire et s'il y en a une elle est
+    // stockée dans la variable "error" et une alerte est affichée pour informer l'utilisateur de l'erreur
+    .catch(function (error) {   
+      error = `ECHEC DU CHARGEMENT, MERCI DE BIEN VOULOIR RAFFRAICHIR LA PAGE OU APPUYER SUR F5.`;
+      alert(error);
+      })
 })
+
+
+// met à jour le pris et la quantité du panier
 const updateQuantityAndPrice = () => {
-  // met à jour le pris et la quantité du panier
   let totalQuantity = 0
   let totalArticlePrice = 0
   let totalCartPrice = 0
-  // pointe vers toute classe cart__item contenue dans chaque article
+  // pointe pour récupérer tous les éléments "article" de la classe "cart__item" dans le DOM
   const articles = document.querySelectorAll("article.cart__item") 
   articles.forEach((article) => {
-    // récupère la value de la classe itemQuantity
-    const articleQuantity = article.querySelector(".itemQuantity").value 
+  // récupère la valeur de la quantité de l'article
+  let articleQuantity = parseInt(article.querySelector(".itemQuantity").value)
+  // Verification si la quantité est < 1 ou > 100
+  if (articleQuantity < 1 || articleQuantity > 100) {
+    // math.min/max permet de limiter la quantité saisie par l'utilisateur entre 1 et 100
+  articleQuantity = Math.min(Math.max(articleQuantity, 1), 100)
+  article.querySelector(".itemQuantity").value = articleQuantity
+  alert("LA QUANTITÉ DOIT ETRE COMPRISE ENTRE 1 ET 100!   Merci.")
+}
     // récupère le contenu string du 2nd p (correspond à la quantité) et le transforme en number
     totalQuantity += parseInt(articleQuantity) // parseInt convertit une string en number
     const articlePrice = parseInt(article.querySelector(".cart__item__content__description p:nth-of-type(2)").textContent)
@@ -26,10 +41,11 @@ const updateQuantityAndPrice = () => {
     totalCartPrice += totalArticlePrice
   })
   // envoie le résultat de totalCartPrice dans le contenu de #totalPrice
-  document.querySelector("#totalPrice").textContent = totalCartPrice
+  document.querySelector("#totalPrice").textContent = `${totalCartPrice}`
   // idem que précédemment pour #totalQuantity
   document.querySelector("#totalQuantity").textContent = totalQuantity
 }
+
 
 const displayCartItems = (cartItem, product) => {
   //affiche un article
@@ -112,6 +128,7 @@ const displayCartItems = (cartItem, product) => {
       cartItemSettingsQuantity.appendChild(itemQuantityInput)
       // input quantity créé avec ses attributs
 
+
       const createSettingsDelete = () => {}
       const cartItemSettingsDelete = document.createElement("div")
       cartItemSettingsDelete.classList.add("cart__item__content__settings__delete")
@@ -130,6 +147,7 @@ const displayCartItems = (cartItem, product) => {
           const articleToDelete = document.querySelector(`article[data-id="${cartItem.id}"][data-color="${cartItem.color}"]`)
           articleToDelete.remove() 
           // supprime l'article du HTML
+          window.alert("VOTRE PRODUIT A BIEN ÉTÉ SUPPRIMÉ DU PANIER").
 
           updateQuantityAndPrice()
           storage()
@@ -144,7 +162,7 @@ const displayCartItems = (cartItem, product) => {
         // p delete créé avec son content
       }
       createItemDelete()
-
+      
       updateQuantityAndPrice()
 
       itemQuantityInput.addEventListener("change", updateQuantityAndPrice) // change de l'input et exécute l'update
@@ -198,173 +216,82 @@ storage()
 
 // --------------------------------------- Formulaire---------------------------------- //
 
-const firstName = document.querySelector("#firstName") // pointe vers l'input prénom
-const lastName = document.querySelector("#lastName") // pointe vers l'input nom
-const address = document.querySelector("#address") // pointe vers l'input adresse
-const city = document.querySelector("#city") // pointe vers l'input ville
-const email = document.querySelector("#email") // pointe vers l'input e-mail
-const orderButton = document.querySelector("#order") // pointe le bouton Commander
+const form = document.querySelector("#form")
+const orderButton = document.querySelector("#order")
 
 orderButton.addEventListener("click", (event) => {
-  // écoute le click sur order et va contrôler :
-  event.preventDefault()
+  event.preventDefault();
 
-  const productsIdsFromCache = () => {
-    let cacheProductsIds = []
-    const numberOfProducts = cartForArticle.length
-    for (let i = 0; i < numberOfProducts; i++) {
-      const productKey = cartForArticle[i].id // récupère l'id-color du produit
-      const productId = productKey.split("-")[0] // ne garde que l'id
-      cacheProductsIds.push(productId) // ajoute l'id du produit dans le tableau cache
-    }
-    return cacheProductsIds
+  // Récupérer les valeurs de contact et de produits
+  const productsIdsFromCache = () => cartForArticle.map(({ id }) => id.split("-")[0])
+  const contact = {
+    firstName: firstName.value,
+    lastName: lastName.value,
+    address: address.value,
+    city: city.value,
+    email: email.value,
+  };
+
+  // Vérifier que tous les champs requis ont été remplis
+  const requiredFields = ["firstName", "lastName", "address", "city", "email"]; // champs requis
+  const missingFields = requiredFields.filter((field) => !contact[field].trim()); // en cas de champs requis manquant
+  if (missingFields.length) {
+    alert(`LES CHAMPS DE SAISIES SONT OBLIGATOIRE : ${missingFields.join(", ")}`);
+    return;
   }
 
-  let body = {
-    // crée le body pour le fetch
-    contact: {
-      firstName: firstName.value,
-      lastName: lastName.value,
-      address: address.value,
-      city: city.value,
-      email: email.value,
-    },
-    products: productsIdsFromCache(),
+  // Vérifier la validité de l'adresse mail
+  if (!emailRegex.test(contact.email)) {
+    alert("VEUILLEZ SAISIR UNE ADRESSE MAIL VALIDE DE TYPE exemple@domaine.xx");
+    return;
   }
 
-  function validateString(val) {
-    return val.replace(/\s/g, '').length > 2
-}
-  if (!validateString(firstName.value) || !validateString(lastName.value) || !validateString(address.value) || !validateString(city.value) || !validateString(email.value)) {
-    alert("Veuillez remplir les champs correctements"); // alors message d'alerte si tous les champs sont vides
-    return; // pour arrêter
-}
-
-  if (firstName.value === "" || lastName.value === "" || address.value ==="" || city.value === "" || email.value === "") {
-    // si tous les champs sont vides
-    event.preventDefault(); // ne pas envoyer form
-    alert("Veuillez remplir tous les champs"); // alors message d'alerte si tous les champs sont vides
-    return; // pour arrêter
-  }
-
-  if (cartForArticle.length == 0) {
-    //si le panier est vide
-    event.preventDefault(); // ne pas envoyer form
-    alert("Votre panier est vide. Veuillez sélectionner des articles, SVP"); // alors message d'alerte si panier vide
-    return; // pour arrêter
-  }
-
+  // Effectuer la requête fetch
   fetch("http://localhost:3000/api/products/order", {
-    // Requête pour poster le contact
     method: "POST",
-    body: JSON.stringify(body),
-    headers: {
-      "Content-type": "application/json",
-    },
+    body: JSON.stringify({ contact, products: productsIdsFromCache() }),
+    headers: { "Content-type": "application/json" },
   })
     .then((res) => res.json())
-    .then((products) => {
-      const orderId = products.orderId;
-      window.location.href = "/front/html/confirmation.html" + "?orderId=" + orderId;
+    .then(({ orderId }) => {
+      window.location.href = `/front/html/confirmation.html?orderId=${orderId}`;
     });
 });
-const nameRegex = /^[a-zA-Z\-\'\s]+$/; // limite le contenu à des lettres, tirets, espaces et apostrophes, et autorise plusieurs mots
 
-let firstNameContent = firstName.value; // valeur de l'input prénom (string)
-let nameRegexFNTest = nameRegex.test(firstNameContent); // teste la string dans input prénom et retourne true ou false
 
-firstName.addEventListener("input", (event) => {
-  if (nameRegexFNTest === false || (firstNameContent = "")) {
-    // si la Regex est fausse ou l'input vide
+const nameRegex = /^[a-zA-Z\-\'\s]+$/;
+const addressRegex = /^[a-zA-Z0-9\s\,\'\-]*$/;
+const cityRegex = /^[a-zA-Z\-\'\s]+$/;
+const emailRegex = /^[A-Za-z0-9_!#$%&'*+\/=?`{|}~^.-]+@[A-Za-z0-9.-]+\.[A-Za-z][A-Za-z]{1,}$/;
+
+const validateString = (val) => {
+  const trimmedVal = val.trim();
+  return !trimmedVal.startsWith(" ") && nameRegex.test(trimmedVal);
+};
+
+const addTrimEventListener = (element, errorElement, regex, errorMsg) => {
+  element.addEventListener("input", (event) => {
     event.preventDefault();
-    const firstNameError = document.querySelector("#firstNameErrorMsg"); // pointe le message d'erreur
-    firstNameError.textContent = "Le prénom doit être composé de lettres (le tiret et l'apostrophe sont acceptés)"; // insère ce texte dans le message d'erreur
-    firstName.focus(); // remet le curseur dans l'input
-    return false; //  alors renvoie False vers isRegexTrue
-  } else {
-    // sinon
-    firstNameError.textContent = ""; // message vide
-    return true;
-  }
-});
+    const content = element.value;
+    const trimmedContent = content.trimStart();
+    if (!regex.test(trimmedContent)) {
+      errorElement.textContent = errorMsg;
+      element.focus();
+    } else if (element.id === "email" && !emailRegex.test(trimmedContent)) { // Vérification de l'email
+      errorElement.textContent = "Format d'adresse mail non conforme.";
+      element.focus();
+    } else {
+      element.value = trimmedContent;
+      errorElement.textContent = "";
+    }
+    if (content !== trimmedContent) {
+      alert("LES ESPACES INUTILES SERONT DÉTECTÉS ET SUPPRIMÉS AUTOMATIQUEMENT");
+    }
+  });
+};
 
-lastName.addEventListener("input", (event) => {
-  event.preventDefault();
-  let lastNameContent = lastName.value; // valeur de l'input nom (string)
-  const lastNameError = document.querySelector("#lastNameErrorMsg"); // pointe le message d'erreur
-  let nameRegexLNTest = nameRegex.test(lastNameContent); // teste la string dans input prénom et retourne true ou false
-  if (nameRegexLNTest === false) {
-    event.preventDefault();
-    lastNameError.textContent = "Le nom doit être composé de lettres (le tiret et l'apostrophe sont acceptés)"; // insère ce texte dans le message d'erreur
-    lastName.focus();
-    return false;
-  } else {
-    lastNameError.textContent = "";
-    return true;
-  }
-});
-
-address.addEventListener("input", (event) => {
-  event.preventDefault();
-  const addressRegex = /^[a-zA-Z0-9\s\,\'\-]*$/;
-  let addressContent = address.value;
-  const addressError = document.querySelector("#addressErrorMsg"); // pointe le message d'erreur
-  let addressRegexTest = addressRegex.test(addressContent);
-  if (addressRegexTest === false) {
-    event.preventDefault();
-    addressError.textContent = "Format d'adresse non conforme"; // insère ce texte dans le message d'erreur
-    address.focus();
-    return false;
-  } else {
-    addressError.textContent = "";
-    return true;
-  }
-});
-
-city.addEventListener("input", (event) => {
-  event.preventDefault();
-  let city = city.value;
-  const cityError = document.querySelector("#cityErrorMsg"); // pointe le message d'erreur
-  let cityRegexTest = nameRegex.test(city);
-  if (cityRegexTest === false) {
-    event.preventDefault();
-    cityError.textContent = "Le nom de la ville doit être composé de lettres (le tiret et l'apostrophe sont acceptés)"; // insère ce texte dans le message d'erreur
-    city.focus();
-    return false;
-  } else {
-    cityError.textContent = "";
-    return true;
-  }
-});
-
-function ValidateEmail(input) {
-
-  const validRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/
-  if (input.value.match(validRegex)) {
-    alert("Addresse email Valide !")
-    document.form1.text1.focus()
-    return true
-  } else {
-    alert("Adresse email Invalide ")
-    document.form1.text1.focus()
-    return false
-  }
-
-}
-
-email.addEventListener("input", (event) => {
-  event.preventDefault();
-  const emailRegex = /^[A-Za-z0-9_!#$%&'*+\/=?`{|}~^.-]+@[A-Za-z0-9.-]+\.[A-Za-z][A-Za-z]{1,}$/;
-  let emailContent = email.value;
-  const emailError = document.querySelector("#emailErrorMsg"); // pointe le message d'erreur
-  let emailRegexTest = emailRegex.test(emailContent);
-  if (emailRegexTest === false) {
-    event.preventDefault();
-    emailError.textContent = "Format d'adresse mail non conforme"; // insère ce texte dans le message d'erreur
-    email.focus();
-    return false;
-  } else {
-    emailError.textContent = "";
-    return true;
-  }
-});
+addTrimEventListener(firstName, document.querySelector("#firstNameErrorMsg"), nameRegex, "Le prénom doit être composé de lettres (le tiret et l'apostrophe sont acceptés).");
+addTrimEventListener(lastName, document.querySelector("#lastNameErrorMsg"), nameRegex, "Le nom doit être composé de lettres (le tiret et l'apostrophe sont acceptés).");
+addTrimEventListener(address, document.querySelector("#addressErrorMsg"), addressRegex, "Format d'adresse non conforme.");
+addTrimEventListener(city, document.querySelector("#cityErrorMsg"), nameRegex, "Le nom de la ville doit être composé de lettres (le tiret et l'apostrophe sont acceptés).");
+addTrimEventListener(email, document.querySelector("#emailErrorMsg"), emailRegex, "Format d'adresse mail non conforme.");
