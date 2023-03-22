@@ -3,6 +3,10 @@
 fetch("http://localhost:3000/api/products")
 	.then((res) => res.json())
 	.then((data) => buildProducts(data))
+	.catch(function (error) {   // retourner valeur si erreur de l'opération fetch
+		error = `Erreur echec du chargement, merci de relancer votre demande.`;
+		alert(error)
+	})
 
 
 	const buildProducts = (products) => { 
